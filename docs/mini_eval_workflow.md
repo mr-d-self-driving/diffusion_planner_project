@@ -45,6 +45,7 @@ results/mini_eval_summary.md
 results/mini_eval_runner_report.csv
 results/mini_eval_aggregated_metrics.csv
 results/mini_eval_metric_scores.csv
+results/mini_eval_score_runtime.png
 ```
 
 ## Re-summarize an existing run
@@ -70,6 +71,15 @@ python .\outputs\diffusion_planner_project\scripts\summarize_nuplan_results.py `
   --prefix "mini_eval"
 ```
 
+Generate the result figure from committed CSV files:
+
+```powershell
+python .\outputs\diffusion_planner_project\scripts\plot_mini_eval.py `
+  --aggregated ".\outputs\diffusion_planner_project\results\mini_eval_aggregated_metrics.csv" `
+  --runner ".\outputs\diffusion_planner_project\results\mini_eval_runner_report.csv" `
+  --output ".\outputs\diffusion_planner_project\results\mini_eval_score_runtime.png"
+```
+
 ## Current local result
 
 | item | value |
@@ -81,6 +91,10 @@ python .\outputs\diffusion_planner_project\scripts\summarize_nuplan_results.py `
 | final weighted score | `0.9254` |
 | mean simulation duration | `134.7063 s` |
 | mean trajectory runtime | `0.8146 s` |
+
+Result figure:
+
+![mini evaluation](../results/mini_eval_score_runtime.png)
 
 Scenario-level scores:
 

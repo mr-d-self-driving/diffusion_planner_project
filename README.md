@@ -4,6 +4,19 @@
 
 本仓库不是 Diffusion-Planner 官方源码仓库，而是一个个人项目化复现仓库。它围绕官方项目完成环境搭建、checkpoint 加载、CUDA 前向验证、synthetic trajectory 可视化、推理 benchmark、nuPlan 数据集接入说明和面试/简历材料整理。
 
+## 当前状态
+
+| 模块 | 状态 |
+| --- | --- |
+| 环境搭建 | Python 3.9 + PyTorch 2.0 + CUDA 11.8 已跑通 |
+| 官方 checkpoint | `missing=0`、`unexpected=0`，完整加载 |
+| synthetic forward | CUDA 前向通过，输出 shape 为 `(1, 11, 81, 4)` |
+| 推理 benchmark | 已生成 latency / throughput / CUDA memory 结果 |
+| nuPlan mini 数据 | 64 个 `.db`、4 个城市地图已接入，数据放在 D 盘 |
+| closed-loop smoke test | 1 场景成功，失败 0 |
+| mini closed-loop evaluation | 5 场景成功，失败 0，final weighted score 0.9254 |
+| GitHub 项目化 | README、脚本、文档、轻量结果图和 CSV 已整理 |
+
 官方来源:
 
 - Paper / Project: Diffusion-Based Planning for Autonomous Driving with Flexible Guidance
@@ -26,6 +39,9 @@
 - 验证 `DiffusionPlanner` planner 类和 `run_simulation` 入口可以导入
 - 生成 synthetic trajectory 可视化图
 - 完成推理延迟 benchmark
+- 接入 nuPlan mini 数据集和 maps
+- 完成 1 场景 closed-loop smoke test
+- 完成 5 场景 mini closed-loop evaluation，并自动汇总 CSV/Markdown/PNG 结果
 - 整理模型结构、环境调试、项目局限、面试讲稿和简历写法
 
 当前尚未完成:
@@ -35,7 +51,7 @@
 - 未重新训练模型
 - 未生成真实 nuPlan 场景的 nuBoard 可视化
 
-原因: 完整 closed-loop simulation 需要 nuPlan 官方数据集和 maps。本仓库当前提供数据集检查脚本和运行模板，数据集到位后可以继续推进。
+原因: 当前使用的是 nuPlan mini split，适合做工程链路验证；论文级别指标仍需要官方完整 challenge split、更大规模场景评估和更规范的实验环境。
 
 ## 2. 为什么这个项目有意义
 
@@ -68,6 +84,7 @@ Diffusion-Planner 的核心思想:
 │   ├── debugging_log.md
 │   ├── interview_notes.md
 │   ├── limitations.md
+│   ├── mini_eval_workflow.md
 │   ├── model_architecture.md
 │   ├── next_experiments.md
 │   ├── nuplan_data_setup.md
@@ -75,14 +92,24 @@ Diffusion-Planner 的核心思想:
 ├── results
 │   ├── inference_benchmark.csv
 │   ├── inference_benchmark.png
+│   ├── mini_eval_aggregated_metrics.csv
+│   ├── mini_eval_metric_scores.csv
+│   ├── mini_eval_runner_report.csv
+│   ├── mini_eval_score_runtime.png
+│   ├── mini_eval_summary.md
+│   ├── mini_simulation_smoke_test.md
 │   └── synthetic_forward_trajectory.png
 └── scripts
     ├── benchmark_inference.py
     ├── bootstrap_repos.ps1
     ├── check_nuplan_data.ps1
     ├── download_checkpoint.ps1
+    ├── download_nuplan_mini.ps1
+    ├── plot_mini_eval.py
     ├── project_utils.py
+    ├── run_mini_eval.ps1
     ├── run_simulation_template.ps1
+    ├── summarize_nuplan_results.py
     ├── verify_checkpoint.py
     ├── verify_forward.py
     └── visualize_synthetic_trajectory.py
@@ -364,19 +391,36 @@ conda run -n diffusion_planner powershell -ExecutionPolicy Bypass `
 | mean simulation duration | 134.7063 s |
 | mean trajectory runtime | 0.8146 s |
 
+结果图:
+
+![mini evaluation](results/mini_eval_score_runtime.png)
+
 轻量结果文件:
 
 - [results/mini_eval_summary.md](results/mini_eval_summary.md)
 - [results/mini_eval_runner_report.csv](results/mini_eval_runner_report.csv)
 - [results/mini_eval_aggregated_metrics.csv](results/mini_eval_aggregated_metrics.csv)
 - [results/mini_eval_metric_scores.csv](results/mini_eval_metric_scores.csv)
+- [results/mini_eval_score_runtime.png](results/mini_eval_score_runtime.png)
 
 更多说明见:
 
 - [docs/nuplan_data_setup.md](docs/nuplan_data_setup.md)
 - [docs/mini_eval_workflow.md](docs/mini_eval_workflow.md)
 
-## 9. 模型结构理解
+## 9. 我做的项目化改造
+
+这个仓库的重点不是搬运官方代码，而是把研究项目变成可复查、可运行、可展示的工程项目:
+
+- 将上游 Diffusion-Planner 和 nuPlan-devkit 放入 `work/`，仓库只保留复现脚本、文档和轻量结果。
+- 编写 `bootstrap_repos.ps1`、`download_checkpoint.ps1`、`download_nuplan_mini.ps1`，把源码、checkpoint、mini 数据下载流程脚本化。
+- 编写 `verify_forward.py` 和 `verify_checkpoint.py`，分别验证 CUDA 前向、输出 shape、数值稳定性和 checkpoint 结构匹配。
+- 编写 `benchmark_inference.py`，量化 denoise forward 与完整 diffusion sampling inference 的延迟差异。
+- 编写 `run_mini_eval.ps1`、`summarize_nuplan_results.py`、`plot_mini_eval.py`，将 nuPlan mini closed-loop 输出自动整理成 CSV、Markdown 和图表。
+- 解决 Windows 下 nuPlan 数据结构、路径长度、GIS/PyTorch/NumPy/protobuf 等依赖兼容问题。
+- 将“做过一次实验”的过程沉淀成 README、debug log、model architecture、limitations、resume/interview notes。
+
+## 10. 模型结构理解
 
 Diffusion-Planner 的核心流程:
 
@@ -390,7 +434,7 @@ Diffusion-Planner 的核心流程:
 
 - [docs/model_architecture.md](docs/model_architecture.md)
 
-## 10. 环境调试记录
+## 11. 环境调试记录
 
 复现过程中解决的关键问题:
 
@@ -406,7 +450,7 @@ Diffusion-Planner 的核心流程:
 
 - [docs/debugging_log.md](docs/debugging_log.md)
 
-## 11. 当前局限
+## 12. 当前局限
 
 本项目可以说明:
 
@@ -415,37 +459,46 @@ Diffusion-Planner 的核心流程:
 - 模型可以在 CUDA 上完成 synthetic forward
 - planner 入口可以导入
 - 可以完成 synthetic benchmark 和可视化
+- 可以在 nuPlan mini 上完成 5 场景 closed-loop nonreactive evaluation
+- 可以自动汇总 runner report、weighted metrics 和场景级结果图
 
 本项目还不能说明:
 
 - 完整复现论文 closed-loop 指标
 - 在 nuPlan Val14/Test14 上达到论文性能
-- 完成真实场景 closed-loop simulation
+- 完成官方 full split 大规模评测
 - 完成模型训练
 
 更详细说明见:
 
 - [docs/limitations.md](docs/limitations.md)
 
-## 12. 后续计划
+## 13. 后续计划
 
 优先级从高到低:
 
-1. 下载并配置 nuPlan mini，跑少量真实 closed-loop simulation。
+1. 将 mini evaluation 扩展到 10-15 个场景，覆盖更多 scenario type。
 2. 生成真实 scenario 的 nuBoard 或自定义轨迹可视化。
 3. 做 sampling steps ablation，例如 5/10/20/50 steps 的速度与轨迹质量对比。
 4. 做 classifier guidance demo，对比 no guidance 和 collision guidance。
-5. 整理真实场景失败案例和分析。
+5. 整理低分场景和失败案例分析。
 
 更多计划见:
 
 - [docs/next_experiments.md](docs/next_experiments.md)
 
-## 13. 简历和面试怎么讲
+## 14. 简历和面试怎么讲
 
 一句话版本:
 
-> 复现并工程化整理 ICLR 2025 Diffusion-Planner 自动驾驶规划模型，完成 nuPlan-devkit 集成、官方 checkpoint 加载、CUDA 前向推理、synthetic 轨迹可视化和推理 benchmark，并分析扩散模型在多智能体轨迹规划中的应用。
+> 复现并工程化整理 ICLR 2025 Diffusion-Planner 自动驾驶规划模型，完成 nuPlan-devkit 集成、官方 checkpoint 加载、CUDA 前向推理、synthetic benchmark、nuPlan mini closed-loop evaluation 和结果自动汇总，并分析扩散模型在多智能体轨迹规划中的应用。
+
+简历 bullet 示例:
+
+- 复现 ICLR 2025 Diffusion-Planner 自动驾驶规划模型，完成 PyTorch/CUDA 环境搭建、官方 checkpoint 加载验证和 nuPlan-devkit 集成。
+- 构建从 synthetic forward 到 nuPlan mini closed-loop evaluation 的验证链路，在 5 个 mini 场景上完成 closed-loop nonreactive 仿真，成功率 5/5，final weighted score 0.9254。
+- 编写自动化脚本完成 checkpoint 下载、数据检查、mini 数据接入、仿真运行、parquet 指标汇总和结果可视化，沉淀可复用 README/实验文档。
+- 排查并解决 NumPy/OpenCV、protobuf/wandb、GIS 依赖、Windows `fcntl` 和路径长度等研究代码工程化问题。
 
 适合岗位:
 
@@ -461,7 +514,7 @@ Diffusion-Planner 的核心流程:
 - [docs/resume_versions.md](docs/resume_versions.md)
 - [docs/interview_notes.md](docs/interview_notes.md)
 
-## 14. References
+## 15. References
 
 ```bibtex
 @inproceedings{
