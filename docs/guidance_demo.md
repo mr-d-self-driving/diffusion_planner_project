@@ -17,7 +17,7 @@ At inference time the decoder passes the guidance function to DPM-Solver as clas
 - `diffusion_planner/model/guidance/documentation_guidance.md`
 - `sim_guidance_demo.sh`
 
-## Windows command sketch
+## Windows command
 
 The guidance planner can be selected by replacing the planner config in a nuPlan simulation run:
 
@@ -32,18 +32,35 @@ conda run -n diffusion_planner powershell -ExecutionPolicy Bypass `
   -Worker "sequential" `
   -LimitTotalScenarios 5 `
   -ExperimentUid "dp/guidance_mini5/model" `
+  -SummaryPrefix "guidance_mini5_eval" `
   -Planner "diffusion_planner_guidance"
 ```
 
-## Current boundary
+## Local result
 
-The base planner has been verified on five mini scenarios. The guidance path has been traced and documented, but it still needs a separate closed-loop run and side-by-side metric comparison before claiming an improvement.
+The guidance run has been executed on the same five mini scenario tokens as the baseline mini5 run.
 
-Suggested comparison:
+| Run | Scenarios | Success / Fail | Final score | Mean compute runtime |
+| --- | ---: | ---: | ---: | ---: |
+| baseline mini5 | 5 | 5 / 0 | 0.9254 | 0.8146 s |
+| guidance mini5 | 5 | 5 / 0 | 0.7264 | 0.4459 s |
 
-| Run | Planner config | Expected output |
-| --- | --- | --- |
-| baseline | `diffusion_planner` | current mini evaluation |
-| guidance | `diffusion_planner_guidance` | comfort / collision / speed-limit comparison |
+The guidance run completed successfully, but it reduced the mini5 final score. The main regression was:
 
-The key thing to watch is not only final score. Guidance can reduce one risk metric while increasing latency or changing comfort, so it should be evaluated as a trade-off.
+| Scenario type | Baseline | Guidance | Main limiting metrics |
+| --- | ---: | ---: | --- |
+| `stopping_at_stop_sign_with_lead` | 1.0000 | 0.0000 | `ego_is_comfortable=0`, `no_ego_at_fault_collisions=0`, `time_to_collision_within_bound=0` |
+
+This means guidance is not automatically better. On this mini split, the collision/TTC-related hard failure outweighed the small progress improvement in another scenario.
+
+Outputs:
+
+- `results/guidance_mini5_eval_summary.md`
+- `results/guidance_mini5_eval_low_score_analysis.md`
+- `results/guidance_mini5_eval_latency_summary.md`
+- `results/guidance_vs_baseline_mini5.md`
+- `results/guidance_vs_baseline_mini5.png`
+
+## Next boundary
+
+The next useful experiment is not simply increasing the number of guidance scenarios. It is to sweep guidance strength, for example `guidance_scale=0.1/0.3/0.5/1.0`, and compare final score, collision, TTC, comfort, and runtime.

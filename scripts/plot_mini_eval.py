@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import textwrap
 from pathlib import Path
 
 import matplotlib
@@ -39,13 +40,17 @@ def plot(aggregated_path: Path, runner_path: Path, output_path: Path) -> None:
         how="left",
     )
 
-    labels = merged["scenario_type"].str.replace("_", "\n", regex=False).tolist()
+    labels = [
+        textwrap.fill(str(value).replace("_", " "), width=24)
+        for value in merged["scenario_type"].tolist()
+    ]
     score_values = merged["score"].astype(float).tolist()
     runtime_values = merged["compute_trajectory_runtimes_mean"].astype(float).tolist()
     duration_values = merged["duration"].astype(float).tolist()
     final = final_score(aggregated)
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5.2), dpi=150)
+    fig_height = max(5.2, 0.62 * len(labels) + 1.8)
+    fig, axes = plt.subplots(1, 3, figsize=(16, fig_height), dpi=150)
     y_positions = range(len(labels))
 
     axes[0].barh(y_positions, score_values, color="#4c78a8")
@@ -54,18 +59,21 @@ def plot(aggregated_path: Path, runner_path: Path, output_path: Path) -> None:
     axes[0].set_title(f"Scenario Score\nfinal={final:.4f}")
     axes[0].set_xlabel("weighted score")
     axes[0].set_yticks(list(y_positions), labels)
+    axes[0].tick_params(axis="y", labelsize=8)
     axes[0].grid(axis="x", linewidth=0.4, alpha=0.35)
 
     axes[1].barh(y_positions, runtime_values, color="#f58518")
     axes[1].set_title("Planner Runtime")
     axes[1].set_xlabel("mean compute_trajectory runtime (s)")
     axes[1].set_yticks(list(y_positions), labels)
+    axes[1].tick_params(axis="y", labelsize=8)
     axes[1].grid(axis="x", linewidth=0.4, alpha=0.35)
 
     axes[2].barh(y_positions, duration_values, color="#54a24b")
     axes[2].set_title("Simulation Duration")
     axes[2].set_xlabel("duration (s)")
     axes[2].set_yticks(list(y_positions), labels)
+    axes[2].tick_params(axis="y", labelsize=8)
     axes[2].grid(axis="x", linewidth=0.4, alpha=0.35)
 
     fig.suptitle(f"nuPlan mini closed-loop evaluation ({len(labels)} scenarios)", y=1.02, fontsize=13)

@@ -2,7 +2,7 @@
 
 ## 没有完整官方 benchmark 指标
 
-当前已完成 nuPlan mini 上的 1 场景 smoke test 和 5 场景 closed-loop nonreactive evaluation，但还没有跑完整官方 challenge split，因此不能声称复现了论文表格中的 Val14/Test14 分数。
+当前已完成 nuPlan mini 上的 1 场景 smoke test、5 场景 baseline evaluation、10 场景 baseline evaluation，以及 5 场景 guidance 对照实验。但还没有跑完整官方 challenge split，因此不能声称复现了论文表格中的 Val14/Test14 分数。
 
 当前已配置 mini 数据和地图:
 
@@ -34,16 +34,42 @@
 
 ## 真实场景可视化仍待完善
 
-当前提供的 `visualize_synthetic_trajectory.py` 只用于展示模型输出链路和 plotting 工具；`mini_eval_score_runtime.png` 展示的是评估指标图，不是地图轨迹图。真实场景轨迹展示应使用 nuBoard 或从真实 scenario 中导出地图和轨迹。
+当前已经提供:
 
-## 简历表述边界
+- `visualize_synthetic_trajectory.py`: synthetic scene 轨迹图，只用于模型输出链路验证。
+- `visualize_nuplan_trajectory.py`: 从真实 nuPlan simulation log 导出 executed ego、expert ego 和 planner future 对比图。
+- `mini10_eval_score_runtime.png`: 评估指标图，不是地图轨迹图。
+
+仍待完善:
+
+- 当前真实轨迹图还没有叠加 lane / route / traffic light 等地图层。
+- 多场景批量导出和 NuBoard 截图还没有整理成静态 artifact。
+
+## Guidance 结果边界
+
+当前 guidance mini5 已跑通，成功 / 失败为 5 / 0，但 final score 从 baseline mini5 的 `0.9254` 降到 `0.7264`。主要退化来自 `stopping_at_stop_sign_with_lead` 场景，该场景 guidance score 为 `0.0000`，并触发 `no_ego_at_fault_collisions=0` 和 `time_to_collision_within_bound=0`。
+
+因此只能说:
+
+- guidance 配置路径已打通。
+- guidance closed-loop 对照实验已完成。
+- 当前 mini5 结果显示 guidance 需要继续调参。
+
+不能说:
+
+- guidance 已经带来性能提升。
+- collision guidance 在当前设置下更安全。
+- mini5 小样本结论可以外推到完整 benchmark。
+
+## 结果表述边界
 
 可以说:
 
 - 复现并验证了 Diffusion-Planner 核心模型链路
 - 完成官方 checkpoint 加载和 CUDA 前向推理
 - 打通 nuPlan planner 入口导入
-- 完成 nuPlan mini 小规模 closed-loop evaluation
+- 完成 nuPlan mini 小规模 closed-loop baseline 和 guidance evaluation
+- 完成低分场景、延迟、采样步数和真实轨迹分析
 - 解决多类依赖兼容问题
 
 不建议说:

@@ -9,21 +9,21 @@
 - 已下载 nuPlan mini 和 maps 到 `D:\nuplan-data`，没有放在 C 盘。
 - 已配置 `NUPLAN_DATA_ROOT`、`NUPLAN_MAPS_ROOT`、`NUPLAN_EXP_ROOT`。
 - 已完成 1 场景 closed-loop smoke test。
-- 已完成 5 场景 mini closed-loop evaluation。
+- 已完成 5 场景和 10 场景 mini closed-loop evaluation。
 - 已生成 `results/mini_eval_summary.md`、runner report、aggregated metrics 和 metric scores。
 
 当前结果:
 
-- 成功 / 失败: 5 / 0
-- final weighted score: 0.9254
-- mean simulation duration: 134.7063 s
-- mean trajectory runtime: 0.8146 s
+- mini5 成功 / 失败: 5 / 0，final weighted score: 0.9254
+- mini10 成功 / 失败: 10 / 0，final weighted score: 0.9287
+- mini10 mean simulation duration: 77.4598 s
+- mini10 mean trajectory runtime: 0.4673 s
 
 后续产出:
 
-- 10-15 个真实 scenario 的 closed-loop simulation 结果
-- 轨迹截图
-- 失败案例分析
+- 15 个以上真实 scenario 的 closed-loop simulation 结果
+- 多场景真实轨迹图
+- guidance 失败案例复盘
 
 ## 2. 推理速度 benchmark
 
@@ -47,7 +47,8 @@
 - 已完成 synthetic benchmark
 - 已输出 `results/inference_benchmark.csv`
 - 已输出 `results/inference_benchmark.png`
-- 后续可扩展为采样步数、CPU/GPU、真实 scenario 输入的对比实验
+- 已完成采样步数 synthetic ablation、CPU smoke test 和真实 runner latency summary
+- 后续可扩展为真实 scenario 输入的分步 profile
 
 ## 3. 采样步数 ablation
 
@@ -79,7 +80,20 @@
 
 - 轨迹可视化
 - 碰撞风险解释
-- 面试讲解图
+- baseline vs guidance 对比图
+
+当前状态:
+
+- 已完成 guidance mini5 closed-loop run，成功 / 失败: 5 / 0。
+- guidance mini5 final weighted score: 0.7264。
+- baseline mini5 final weighted score: 0.9254。
+- 主要退化来自 `stopping_at_stop_sign_with_lead` 场景，guidance score 为 0，触发 collision/TTC/comfort 相关扣分。
+
+后续方向:
+
+- 扫描 `guidance_scale=0.1/0.3/0.5/1.0`。
+- 对 guidance 失败场景导出真实轨迹图。
+- 检查 collision guidance 是否需要针对 stop-sign 场景做约束权重或触发时机调整。
 
 ## 5. 项目发布整理
 
@@ -92,4 +106,4 @@
 - 一键验证脚本
 - 结果截图
 - 局限说明
-- 简历 bullet
+- 结果复盘和局限说明
