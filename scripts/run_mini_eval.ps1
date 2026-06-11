@@ -12,6 +12,8 @@ param(
     [string]$SummaryPrefix = "mini_eval",
     [string]$Planner = "diffusion_planner",
     [double]$GuidanceScale = -1,
+    [double]$GuidanceWeight = -1,
+    [string]$ScenarioToken = "",
     [switch]$SkipSimulation
 )
 
@@ -66,7 +68,9 @@ if (-not $SkipSimulation) {
         -LimitTotalScenarios $LimitTotalScenarios `
         -ExperimentUid $ExperimentUid `
         -Planner $Planner `
-        -GuidanceScale $GuidanceScale
+        -GuidanceScale $GuidanceScale `
+        -GuidanceWeight $GuidanceWeight `
+        -ScenarioToken $ScenarioToken
 }
 
 python "$PSScriptRoot\summarize_nuplan_results.py" `

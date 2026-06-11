@@ -63,13 +63,16 @@ scale sweep 的 mini5 结果进一步显示:
 
 stop-sign 失败场景的轨迹复盘显示，baseline executed path length 为 `7.162 m`，scale `0.5` 和 `1.0` 分别增长到 `17.105 m` 和 `20.768 m`，endpoint error 分别为 `11.879 m` 和 `15.423 m`。这说明较强 guidance 在该场景中不仅影响指标，也明显改变了 closed-loop 执行轨迹。
 
+进一步将 collision guidance 内部 multiplier 从 `3.0` 降到 `1.0`，保持外层 `guidance_scale=0.5` 后，mini5 final score 从 `0.7264` 恢复到 `0.9254`，stop-sign 场景从 `0.0000` 恢复到 `1.0000`。这个结果说明 failure 对 guidance 权重敏感，但仍只是 mini5 小样本诊断。
+
 因此只能说:
 
 - guidance 配置路径已打通。
 - guidance closed-loop 对照实验已完成。
 - guidance scale sweep 已完成。
 - guidance 失败场景的静态轨迹复盘已完成。
-- 当前 mini5 结果显示 guidance 需要继续调约束权重、触发时机和失败场景处理。
+- collision guidance weight tuning 已完成一个 mini5 诊断版本。
+- 当前 mini5 结果显示 guidance 需要继续在更大场景子集上验证约束权重、触发时机和失败场景处理。
 
 不能说:
 

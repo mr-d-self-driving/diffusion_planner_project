@@ -7,7 +7,7 @@ guidance_fn:
   _target_: diffusion_planner.model.guidance.guidance_wrapper.GuidanceWrapper
 ```
 
-At inference time the decoder passes the guidance function to DPM-Solver as classifier guidance. The upstream code uses `guidance_scale=0.5`; this project adds a small patch helper so the scale can be controlled through `DP_GUIDANCE_SCALE` for diagnostic sweeps.
+At inference time the decoder passes the guidance function to DPM-Solver as classifier guidance. The upstream code uses `guidance_scale=0.5` and an internal collision guidance multiplier of `3.0`; this project adds a small patch helper so the scale and collision weight can be controlled through `DP_GUIDANCE_SCALE` and `DP_COLLISION_GUIDANCE_WEIGHT` for diagnostic sweeps.
 
 ## Official entry points
 
@@ -34,7 +34,8 @@ conda run -n diffusion_planner powershell -ExecutionPolicy Bypass `
   -ExperimentUid "dp/guidance_mini5/model" `
   -SummaryPrefix "guidance_mini5_eval" `
   -Planner "diffusion_planner_guidance" `
-  -GuidanceScale 0.5
+  -GuidanceScale 0.5 `
+  -GuidanceWeight 1.0
 ```
 
 ## Local result
@@ -87,6 +88,18 @@ The failing stop-sign scenario was inspected by overlaying the executed ego traj
 
 This gives a useful failure hypothesis: stronger collision guidance pushes the executed path much farther than the successful baseline/scale-0.1 runs. The static plot does not prove the exact collision partner or frame, but it narrows the next debug target to guidance weighting, timing, and stop-sign interaction behavior.
 
+## Collision weight tuning
+
+The internal collision guidance multiplier was then reduced from `3.0` to `1.0`, while keeping the outer DPM-Solver `guidance_scale=0.5`.
+
+| Run | Final score | Collision | TTC | Comfort | Stop-sign score | Mean runtime |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| baseline | 0.9254 | 1.0000 | 1.0000 | 0.6000 | 1.0000 | 0.8146 s |
+| guidance scale 0.5, weight 3.0 | 0.7264 | 0.8000 | 0.8000 | 0.4000 | 0.0000 | 0.4459 s |
+| guidance scale 0.5, weight 1.0 | 0.9254 | 1.0000 | 1.0000 | 0.6000 | 1.0000 | 0.4391 s |
+
+On this mini5 subset, reducing the internal collision weight recovers the stop-sign hard failure and restores the final score to the baseline level. It does not prove that guidance is better than baseline; it shows that the original failure is sensitive to guidance weighting and can be debugged systematically.
+
 Outputs:
 
 - `results/guidance_mini5_eval_summary.md`
@@ -100,7 +113,13 @@ Outputs:
 - `results/guidance_stop_sign_trajectory_comparison.md`
 - `results/guidance_stop_sign_trajectory_comparison.csv`
 - `results/guidance_stop_sign_trajectory_comparison.png`
+- `results/guidance_w10_mini5_eval_summary.md`
+- `results/guidance_weight_vs_default_mini5.md`
+- `results/guidance_weight_vs_default_mini5.png`
+- `results/guidance_weight_vs_baseline_mini5.md`
+- `results/guidance_weight_stop_sign_trajectory_comparison.md`
+- `results/guidance_weight_stop_sign_trajectory_comparison.png`
 
 ## Next boundary
 
-The next useful experiment is to adjust the collision guidance weight or trigger timing and rerun the same scale sweep on the stop-sign scenario.
+The next useful experiment is to validate `guidance_scale=0.5, collision_weight=1.0` on more scenarios, then adjust guidance trigger timing if new failures appear.

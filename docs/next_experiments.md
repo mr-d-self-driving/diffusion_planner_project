@@ -91,11 +91,13 @@
 - 已完成 `guidance_scale=0.1/0.3/0.5/1.0` 扫描。
 - scale `0.1` 保持 baseline 级别 final score；scale `0.3/0.5/1.0` 都让 stop-sign 场景 score 掉到 0。
 - 已完成 stop-sign 失败场景轨迹复盘，scale `0.5/1.0` 的 executed path length 明显长于 baseline。
+- 已完成 collision guidance weight tuning：`guidance_scale=0.5, collision_weight=1.0` 在 mini5 上将 final score 从默认 guidance 的 `0.7264` 恢复到 `0.9254`。
 
 后续方向:
 
-- 检查 collision guidance 是否需要针对 stop-sign 场景做约束权重或触发时机调整。
-- 在调整 guidance 函数后复跑同一组 scale sweep，避免只看单点结果。
+- 将 tuned guidance 跑到 10 个以上 mini scenario，检查是否仍然稳定。
+- 如果新的失败集中在特定类型，继续调 collision guidance 的触发时间窗或场景条件。
+- 在调整 guidance 函数后复跑同一组 scale/weight sweep，避免只看单点结果。
 
 ## 5. 项目发布整理
 

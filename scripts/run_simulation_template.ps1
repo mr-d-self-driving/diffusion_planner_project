@@ -10,7 +10,9 @@ param(
     [int]$LimitTotalScenarios = 1,
     [string]$ExperimentUid = "dp/mini/model",
     [string]$Planner = "diffusion_planner",
-    [double]$GuidanceScale = -1
+    [double]$GuidanceScale = -1,
+    [double]$GuidanceWeight = -1,
+    [string]$ScenarioToken = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -53,10 +55,16 @@ $env:HYDRA_FULL_ERROR = "1"
 $ArgsFile = Join-Path $DiffusionPlannerRoot "checkpoints\args.json"
 $CkptFile = Join-Path $DiffusionPlannerRoot "checkpoints\model.pth"
 
-if ($GuidanceScale -ge 0) {
+if (($GuidanceScale -ge 0) -or ($GuidanceWeight -ge 0)) {
     python "$PSScriptRoot\enable_guidance_scale_override.py" --repo-root "$DiffusionPlannerRoot"
+}
+if ($GuidanceScale -ge 0) {
     $env:DP_GUIDANCE_SCALE = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0}", $GuidanceScale)
     Write-Output "DP_GUIDANCE_SCALE=$env:DP_GUIDANCE_SCALE"
+}
+if ($GuidanceWeight -ge 0) {
+    $env:DP_COLLISION_GUIDANCE_WEIGHT = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0}", $GuidanceWeight)
+    Write-Output "DP_COLLISION_GUIDANCE_WEIGHT=$env:DP_COLLISION_GUIDANCE_WEIGHT"
 }
 
 $SimulationArgs = @(
@@ -78,6 +86,9 @@ $SimulationArgs = @(
 
 if ($Worker -eq "ray_distributed") {
     $SimulationArgs += "worker.threads_per_node=8"
+}
+if ($ScenarioToken) {
+    $SimulationArgs += "scenario_filter.scenario_tokens=[$ScenarioToken]"
 }
 
 python "$env:NUPLAN_DEVKIT_ROOT\nuplan\planning\script\run_simulation.py" @SimulationArgs

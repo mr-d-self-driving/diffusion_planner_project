@@ -1,0 +1,6 @@
+scenario,scenario_type,baseline_score,candidate_score,score_delta,limits
+d0b68e15688c58ad,on_pickup_dropoff,0.8880199797028863,0.8869841551040598,-0.0010358245988264514,ego_progress_along_expert_route=0.9669; speed_limit_compliance=0.5893
+1f151e15c9cf5c81,near_multiple_vehicles,0.875,0.875,0.0,ego_is_comfortable=0.0000
+aa8237ebd54f5a0b,starting_protected_noncross_turn,1.0,1.0,0.0,none below 0.999
+6bd0988fce0f548b,stopping_at_stop_sign_with_lead,1.0,1.0,0.0,none below 0.999
+99ca544752f255ad,accelerating_at_traffic_light_without_lead,0.8640854086951276,0.864924324908174,0.0008389162130463257,ego_is_comfortable=0.0000; ego_progress_along_expert_route=0.9678

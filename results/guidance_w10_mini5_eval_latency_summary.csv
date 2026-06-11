@@ -1,0 +1,2 @@
+num_scenarios,mean_compute_runtime_s,median_compute_runtime_s,p90_compute_runtime_s,p95_compute_runtime_s,max_compute_runtime_s,mean_simulation_duration_s,max_simulation_duration_s
+5,0.4390687897002247,0.4400582288590635,0.4712008499060406,0.47449576161968693,0.4777906733333333,70.4901627,76.39351889999999
